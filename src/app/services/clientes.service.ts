@@ -1,22 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Cliente } from '../models/Cliente.model';
+import { catchError, EMPTY, map, Observable } from 'rxjs';
+import { AlertController } from '@ionic/angular';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClientesService {
 
-  url = 'http://localhost:3000/clientes';
+  url = 'http://localhost:3000/cliente';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private alertCtrl: AlertController) { }
 
   create(cliente: Cliente){
     return this.http.post(this.url, cliente);
   }
 
-  getAll(){
-    return this.http.get(this.url);
+  getAll():Observable<Cliente[]>{
+    return this.http.get<Cliente[]>(this.url).pipe(
+      map(retorno => retorno),
+      catchError(erro => this.exibirErro(erro))
+    );
   }
 
   getOne(id: number){
@@ -36,4 +41,21 @@ export class ClientesService {
   login(){}
 
   logout(){}
+
+  exibirErro(erro: any):Observable<any>{
+    const titulo = 'Erro na Conexão!'
+    const msg = `Verifique sua conexão ou informe ao suporte o erro: ${erro.status}`;
+    this.presentAlert(titulo, msg);
+    return EMPTY;
+  }
+
+  async presentAlert(titulo: string, msg: string) {
+    const alert = await this.alertCtrl.create({
+      header: titulo,
+      message: msg,
+      buttons: ['OK'],
+    });
+
+    await alert.present();
+  }
 }
